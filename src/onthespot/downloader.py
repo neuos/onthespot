@@ -5,7 +5,7 @@ import threading
 import time
 import traceback
 import os
-from PyQt6.QtCore import QObject, pyqtSignal
+from .qt_adapter import QObject, pyqtSignal
 from librespot.audio.decoders import AudioQuality, VorbisOnlyAudioQuality
 from librespot.metadata import TrackId, EpisodeId
 from yt_dlp import YoutubeDL

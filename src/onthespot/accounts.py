@@ -1,5 +1,5 @@
 from time import sleep
-from PyQt6.QtCore import QThread, pyqtSignal
+from .qt_adapter import QThread, pyqtSignal
 from .api.apple_music import apple_music_login_user, apple_music_get_token
 from .api.bandcamp import bandcamp_login_user
 from .api.deezer import deezer_login_user, deezer_get_token
