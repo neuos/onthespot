@@ -22,7 +22,7 @@ from .api.crunchyroll import crunchyroll_get_episode_metadata, crunchyroll_get_d
 from .api.generic import generic_get_track_metadata
 from .otsconfig import config
 from .runtimedata import get_logger, download_queue, download_queue_lock, account_pool, temp_download_path
-from .utils import format_item_path, convert_audio_format, embed_metadata, set_music_thumbnail, fix_mp3_metadata, add_to_m3u_file, strip_metadata, convert_video_format
+from .utils import format_item_path, convert_audio_format, embed_metadata, set_music_thumbnail, fix_mp3_metadata, fix_multivalue_tags, add_to_m3u_file, strip_metadata, convert_video_format
 
 logger = get_logger("downloader")
 
@@ -216,6 +216,7 @@ class DownloadWorker(QObject):
                                     if not config.get('raw_media_download'):
                                         strip_metadata(item)
                                         embed_metadata(item, item_metadata)
+                                        fix_multivalue_tags(item['file_path'], item_metadata)
 
                                         # Thumbnail
                                         if config.get('save_album_cover') or config.get('embed_cover'):
@@ -721,6 +722,7 @@ class DownloadWorker(QObject):
                             convert_audio_format(file_path, bitrate, default_format)
 
                             embed_metadata(item, item_metadata)
+                            fix_multivalue_tags(file_path, item_metadata)
 
                             # Thumbnail
                             if config.get('save_album_cover') or config.get('embed_cover'):
