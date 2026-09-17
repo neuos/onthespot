@@ -516,7 +516,6 @@ class DownloadWorker(QObject):
         if not config.get("raw_media_download"):
             strip_metadata(item)
             embed_metadata(item, item_metadata)
-            fix_multivalue_tags(item["file_path"], item_metadata)
             if config.get("save_album_cover") or config.get("embed_cover"):
                 item["item_status"] = ItemStatus.SETTING_THUMBNAIL
                 if self.gui:
@@ -524,6 +523,11 @@ class DownloadWorker(QObject):
                 set_music_thumbnail(item["file_path"], item_metadata)
             if os.path.splitext(item["file_path"])[1] == ".mp3":
                 fix_mp3_metadata(item["file_path"])
+            # Must run last: set_music_thumbnail() remuxes mp3s through
+            # ffmpeg (-c copy) to attach cover art, which does not
+            # preserve a multi-value ID3v2.4 text frame written earlier -
+            # it collapses it back down to a single value.
+            fix_multivalue_tags(item["file_path"], item_metadata)
         elif config.get("save_album_cover"):
             item["item_status"] = ItemStatus.SETTING_THUMBNAIL
             if self.gui:
@@ -1296,7 +1300,6 @@ class DownloadWorker(QObject):
                 bitrate = config.get("file_bitrate")
             convert_audio_format(final_path, bitrate, default_format)
             embed_metadata(item, item_metadata)
-            fix_multivalue_tags(final_path, item_metadata)
 
             if config.get("save_album_cover") or config.get("embed_cover"):
                 item["item_status"] = ItemStatus.SETTING_THUMBNAIL
@@ -1306,6 +1309,12 @@ class DownloadWorker(QObject):
 
             if os.path.splitext(final_path)[1] == ".mp3":
                 fix_mp3_metadata(final_path)
+
+            # Must run last: set_music_thumbnail() remuxes mp3s through
+            # ffmpeg (-c copy) to attach cover art, which does not
+            # preserve a multi-value ID3v2.4 text frame written earlier -
+            # it collapses it back down to a single value.
+            fix_multivalue_tags(final_path, item_metadata)
 
         elif config.get("save_album_cover"):
             item["item_status"] = ItemStatus.SETTING_THUMBNAIL
