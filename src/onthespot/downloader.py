@@ -72,6 +72,7 @@ from .utils import (
     convert_video_format,
     embed_metadata,
     fix_mp3_metadata,
+    fix_multivalue_tags,
     format_item_path,
     set_music_thumbnail,
     strip_metadata,
@@ -515,6 +516,7 @@ class DownloadWorker(QObject):
         if not config.get("raw_media_download"):
             strip_metadata(item)
             embed_metadata(item, item_metadata)
+            fix_multivalue_tags(item["file_path"], item_metadata)
             if config.get("save_album_cover") or config.get("embed_cover"):
                 item["item_status"] = ItemStatus.SETTING_THUMBNAIL
                 if self.gui:
@@ -1294,6 +1296,7 @@ class DownloadWorker(QObject):
                 bitrate = config.get("file_bitrate")
             convert_audio_format(final_path, bitrate, default_format)
             embed_metadata(item, item_metadata)
+            fix_multivalue_tags(final_path, item_metadata)
 
             if config.get("save_album_cover") or config.get("embed_cover"):
                 item["item_status"] = ItemStatus.SETTING_THUMBNAIL

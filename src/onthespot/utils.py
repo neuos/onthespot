@@ -28,7 +28,10 @@ from hashlib import md5
 from urllib.parse import urlparse
 from io import BytesIO
 from PIL import Image
-from mutagen.id3 import ID3, ID3NoHeaderError, WOAS, USLT, TCMP, COMM
+from mutagen.flac import FLAC
+from mutagen.id3 import ID3, ID3NoHeaderError, TPE1, TPE2, WOAS, USLT, TCMP, COMM
+from mutagen.oggopus import OggOpus
+from mutagen.oggvorbis import OggVorbis
 import music_tag
 from .otsconfig import config
 from .runtimedata import get_logger, pending, download_queue
@@ -993,6 +996,64 @@ def fix_mp3_metadata(filename):
         id3["TCMP"] = TCMP(encoding=3, text=id3["TXXX:TCMP"].text[0])
         del id3["TXXX:TCMP"]
     id3.save()
+
+
+def fix_multivalue_tags(filename, metadata):
+    """Rewrite artist/album artist tags as genuine multi-value fields.
+
+    embed_metadata() writes metadata["artists"]/metadata["album_artists"]
+    (already joined with the configured metadata_separator by
+    conv_list_format() when the item's metadata dict was built) straight
+    into ffmpeg's -metadata flag, which only accepts one value per key.
+    Left as-is, that string is stored as one literal tag value, so
+    players/servers that read tags via their standard multi-value
+    convention (repeated Vorbis comments for FLAC/Ogg/Opus, a multi-value
+    ID3v2.4 text frame for MP3) see one artist named e.g. "Artist A;
+    Artist B" instead of two separate artists. This splits the joined
+    string back apart and rewrites the tag using each format's native
+    multi-value convention.
+    """
+    separator = config.get('metadata_separator')
+    if not separator:
+        return
+
+    def split(value):
+        if not value:
+            return []
+        return [part.strip() for part in value.split(separator) if part.strip()]
+
+    artists = split(metadata.get('artists')) if config.get('embed_artist') else []
+    album_artists = split(metadata.get('album_artists')) if config.get('embed_albumartist') else []
+
+    if len(artists) < 2 and len(album_artists) < 2:
+        return
+
+    filetype = os.path.splitext(filename)[1].lower()
+
+    if filetype == '.mp3':
+        try:
+            id3 = ID3(filename)
+        except ID3NoHeaderError:
+            return
+        if len(artists) > 1:
+            id3.setall('TPE1', [TPE1(encoding=3, text=artists)])
+        if len(album_artists) > 1:
+            id3.setall('TPE2', [TPE2(encoding=3, text=album_artists)])
+        id3.save()
+
+    elif filetype in ('.flac', '.ogg', '.opus'):
+        tagger = {'.flac': FLAC, '.ogg': OggVorbis, '.opus': OggOpus}[filetype]
+        f = tagger(filename)
+        if len(artists) > 1:
+            f['artist'] = artists
+        if len(album_artists) > 1:
+            f['albumartist'] = album_artists
+        f.save()
+
+    # m4a/mp4/wav intentionally left untouched: MP4 atoms and RIFF INFO
+    # chunks have no comparably well-supported repeated-value convention,
+    # so ffmpeg's joined string is already the least-bad representation
+    # for those containers.
 
 
 # ---------------------------------------------------------------------------
