@@ -216,7 +216,6 @@ class DownloadWorker(QObject):
                                     if not config.get('raw_media_download'):
                                         strip_metadata(item)
                                         embed_metadata(item, item_metadata)
-                                        fix_multivalue_tags(item['file_path'], item_metadata)
 
                                         # Thumbnail
                                         if config.get('save_album_cover') or config.get('embed_cover'):
@@ -227,6 +226,12 @@ class DownloadWorker(QObject):
 
                                         if os.path.splitext(item['file_path'])[1] == '.mp3':
                                             fix_mp3_metadata(item['file_path'])
+
+                                        # Must run last: set_music_thumbnail() remuxes mp3/flac/ogg
+                                        # files through ffmpeg (-c copy) to attach cover art, which
+                                        # does not preserve a multi-value ID3v2.4/Vorbis-comment tag
+                                        # written earlier - it collapses it back to a single value.
+                                        fix_multivalue_tags(item['file_path'], item_metadata)
                                     else:
                                         if config.get('save_album_cover'):
                                             item['item_status'] = 'Setting Thumbnail'
@@ -722,7 +727,6 @@ class DownloadWorker(QObject):
                             convert_audio_format(file_path, bitrate, default_format)
 
                             embed_metadata(item, item_metadata)
-                            fix_multivalue_tags(file_path, item_metadata)
 
                             # Thumbnail
                             if config.get('save_album_cover') or config.get('embed_cover'):
@@ -733,6 +737,12 @@ class DownloadWorker(QObject):
 
                             if os.path.splitext(file_path)[1] == '.mp3':
                                 fix_mp3_metadata(file_path)
+
+                            # Must run last: set_music_thumbnail() remuxes mp3/flac/ogg
+                            # files through ffmpeg (-c copy) to attach cover art, which
+                            # does not preserve a multi-value ID3v2.4/Vorbis-comment tag
+                            # written earlier - it collapses it back to a single value.
+                            fix_multivalue_tags(file_path, item_metadata)
                         else:
                             if config.get('save_album_cover'):
                                 item['item_status'] = 'Setting Thumbnail'
