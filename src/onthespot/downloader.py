@@ -231,7 +231,7 @@ class DownloadWorker(QObject):
                                         # files through ffmpeg (-c copy) to attach cover art, which
                                         # does not preserve a multi-value ID3v2.4/Vorbis-comment tag
                                         # written earlier - it collapses it back to a single value.
-                                        fix_multivalue_tags(item['file_path'], item_metadata)
+                                        fix_multivalue_tags(item['file_path'])
                                     else:
                                         if config.get('save_album_cover'):
                                             item['item_status'] = 'Setting Thumbnail'
@@ -742,7 +742,7 @@ class DownloadWorker(QObject):
                             # files through ffmpeg (-c copy) to attach cover art, which
                             # does not preserve a multi-value ID3v2.4/Vorbis-comment tag
                             # written earlier - it collapses it back to a single value.
-                            fix_multivalue_tags(file_path, item_metadata)
+                            fix_multivalue_tags(file_path)
                         else:
                             if config.get('save_album_cover'):
                                 item['item_status'] = 'Setting Thumbnail'
