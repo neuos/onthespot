@@ -527,7 +527,7 @@ class DownloadWorker(QObject):
             # ffmpeg (-c copy) to attach cover art, which does not
             # preserve a multi-value ID3v2.4 text frame written earlier -
             # it collapses it back down to a single value.
-            fix_multivalue_tags(item["file_path"], item_metadata)
+            fix_multivalue_tags(item["file_path"])
         elif config.get("save_album_cover"):
             item["item_status"] = ItemStatus.SETTING_THUMBNAIL
             if self.gui:
@@ -1314,7 +1314,7 @@ class DownloadWorker(QObject):
             # ffmpeg (-c copy) to attach cover art, which does not
             # preserve a multi-value ID3v2.4 text frame written earlier -
             # it collapses it back down to a single value.
-            fix_multivalue_tags(final_path, item_metadata)
+            fix_multivalue_tags(final_path)
 
         elif config.get("save_album_cover"):
             item["item_status"] = ItemStatus.SETTING_THUMBNAIL
