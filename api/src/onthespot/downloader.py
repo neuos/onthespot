@@ -56,6 +56,7 @@ from .utils import (
     convert_video_format,
     embed_metadata,
     fix_mp3_metadata,
+    fix_multivalue_tags,
     format_item_path,
     jittered_delay,
     requeue_item,
@@ -514,6 +515,7 @@ class DownloadWorker:
                 set_music_thumbnail(item.file_path, item_metadata)
             if os.path.splitext(item.file_path)[1] == ".mp3":
                 fix_mp3_metadata(item.file_path)
+            fix_multivalue_tags(item.file_path)
         elif config.get("save_album_cover"):
             progress_hook(item, 70, ItemStatus.SETTING_THUMBNAIL)
             set_music_thumbnail(file_path, item_metadata)
@@ -680,6 +682,8 @@ class DownloadWorker:
 
             if os.path.splitext(final_path)[1] == ".mp3":
                 fix_mp3_metadata(final_path)
+
+            fix_multivalue_tags(final_path)
 
         elif config.get("save_album_cover"):
             progress_hook(item, 80, ItemStatus.SETTING_THUMBNAIL)
